@@ -3893,21 +3893,21 @@
 
       function sanitizeAmountInput(value) {
         let cleaned = value.replace(/,/g, "").replace(/[^\d.]/g, "");
-        const dotIndex = cleaned.indexOf(".");
-        if (dotIndex !== -1) {
-          cleaned = cleaned.slice(0, dotIndex + 1) + cleaned.slice(dotIndex + 1).replace(/\./g, "");
+        const firstDot = cleaned.indexOf(".");
+        if (firstDot !== -1) {
+          cleaned = cleaned.slice(0, firstDot + 1) + cleaned.slice(firstDot + 1).replace(/\./g, "");
         }
         if (cleaned.startsWith(".")) cleaned = `0${cleaned}`;
-        if (dotIndex === 0) cleaned = `0${cleaned}`;
 
         const [integer = "", decimal = ""] = cleaned.split(".");
         const safeInteger = integer.slice(0, 8);
-        return decimal ? `${safeInteger}.${decimal.slice(0, 2)}` : safeInteger;
+        /* 保留末尾的小数点，否则用户刚输入“12.”就会被立刻删掉，无法继续输入小数 */
+        return cleaned.includes(".") ? `${safeInteger}.${decimal.slice(0, 2)}` : safeInteger;
       }
 
       function parseAmountToCents(value) {
         const text = String(value || "").trim();
-        if (!/^\d+(?:\.\d{1,2})?$/.test(text)) return null;
+        if (!/^\d+(?:\.\d{0,2})?$/.test(text)) return null;
         const cents = Math.round(Number(text) * 100);
         if (!Number.isFinite(cents) || cents <= 0 || cents > MAX_AMOUNT_CENTS) return null;
         return cents;
